@@ -1,0 +1,95 @@
+SELECT T
+	.*,
+	st_asgeojson ( T.geom ) AS geomJson 
+FROM
+	biz_province P,
+	biz_scenic_spot T 
+WHERE
+	P.code = '430000' 
+	AND st_contains ( P.geom, T.geom );
+package com.yelang.project.extend.scenicspot.domain;
+import java.io.Serializable;
+import org.apache.ibatis.type.BlobByteObjectArrayTypeHandler;
+import org.apache.ibatis.type.BlobInputStreamTypeHandler;
+import org.apache.ibatis.type.BlobTypeHandler;
+import org.apache.ibatis.type.ByteArrayTypeHandler;
+import org.apache.ibatis.type.ByteObjectArrayTypeHandler;
+import org.apache.ibatis.type.ByteTypeHandler;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.yelang.framework.handler.PgGeometryTypeHandler;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+ 
+/**
+ *  全国风景区信息表
+* @author wzh
+*
+*/
+@TableName(value = "biz_scenic_spot", autoResultMap = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Setter
+@Getter
+@ToString
+public class ScenicSpot implements Serializable{
+	private static final long serialVersionUID = 1830004907219610805L;
+	@TableId
+	private Long id;
+	private String name;//景区名称
+	private String level;//景区级别
+	private String province;//所属省份
+	private String city;//所属城市
+	private String area;//所属区县
+	private String address;//地址
+	@TableField(value="evaluation_time")
+	private String evaluationTime;//评定时间
+	@TableField(value="publish_time")
+	private String publishTime;//发布时间
+	@TableField(value="publish_link")
+	private String publishLink;//发布时间
+	@TableField(value="lng_GCJ02")
+	private String lngGCJ02;
+	@TableField(value="lat_GCJ02")
+	private String latGCJ02;
+	@TableField(value="lng_BD09")
+	private String lngBD09;
+	@TableField(value="lat_BD09")
+	private String latBD09;
+	@TableField(value="lng_WGS84")
+	private String lngWGS84;
+	@TableField(value="lat_WGS84")
+	private String latWGS84;
+	@TableField(typeHandler = PgGeometryTypeHandler.class)
+	private String geom;
+	@TableField(exist=false)
+	private String geomJson;
+	@TableField(exist=false)
+	private byte[] tile;
+ 
+	public ScenicSpot(String name, String level, String province, String city, String area, String address,
+			String evaluationTime, String publishTime, String publishLink,String lngGCJ02, String latGCJ02, String lngBD09, String latBD09,
+			String lngWGS84, String latWGS84, String geom) {
+		super();
+		this.name = name;
+		this.level = level;
+		this.province = province;
+		this.city = city;
+		this.area = area;
+		this.address = address;
+		this.evaluationTime = evaluationTime;
+		this.publishTime = publishTime;
+		this.publishLink = publishLink;
+		this.lngGCJ02 = lngGCJ02;
+		this.latGCJ02 = latGCJ02;
+		this.lngBD09 = lngBD09;
+		this.latBD09 = latBD09;
+		this.lngWGS84 = lngWGS84;
+		this.latWGS84 = latWGS84;
+		this.geom = geom;
+	}
+}
