@@ -1,0 +1,14 @@
+public abstract class User {
+    public String name;
+    protected Ioperate[] opertions;
+
+    public User(String name) {
+        this.name = name;
+    }
+
+    public abstract int menu();
+
+    public void work(int choice, BookList bookList){
+        opertions[choice].operate(bookList);
+    }
+}
