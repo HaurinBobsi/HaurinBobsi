@@ -1,0 +1,86 @@
+/**
+     * 登录
+     * @param data
+     * @param httpServletRequest
+     * @return
+     */
+    @PostMapping("login")
+    public Map<String, Object> login(@RequestBody Map<String, String> data, HttpServletRequest httpServletRequest) {
+        log.info("[执行登录接口]");
+ 
+        String username = data.get("username");
+        String email = data.get("email");
+        String phone = data.get("phone");
+        String password = data.get("password");
+ 
+        List resultList = null;
+        Map<String, String> map = new HashMap<>();
+        if(username != null && "".equals(username) == false){
+            map.put("username", username);
+            resultList = service.select(map, new HashMap<>()).getResultList();
+        }
+        else if(email != null && "".equals(email) == false){
+            map.put("email", email);
+            resultList = service.select(map, new HashMap<>()).getResultList();
+        }
+        else if(phone != null && "".equals(phone) == false){
+            map.put("phone", phone);
+            resultList = service.select(map, new HashMap<>()).getResultList();
+        }else{
+            return error(30000, "账号或密码不能为空");
+        }
+        if (resultList == null || password == null) {
+            return error(30000, "账号或密码不能为空");
+        }
+        //判断是否有这个用户
+        if (resultList.size()<=0){
+            return error(30000,"用户不存在");
+        }
+ 
+        User byUsername = (User) resultList.get(0);
+ 
+ 
+        Map<String, String> groupMap = new HashMap<>();
+        groupMap.put("name",byUsername.getUserGroup());
+        List groupList = userGroupService.select(groupMap, new HashMap<>()).getResultList();
+        if (groupList.size()<1){
+            return error(30000,"用户组不存在");
+        }
+ 
+        UserGroup userGroup = (UserGroup) groupList.get(0);
+ 
+        //查询用户审核状态
+        if (!StringUtils.isEmpty(userGroup.getSourceTable())){
+            String sql = "select examine_state from "+ userGroup.getSourceTable() +" WHERE user_id = " + byUsername.getUserId();
+            String res = String.valueOf(service.runCountSql(sql).getSingleResult());
+            if (res==null){
+                return error(30000,"用户不存在");
+            }
+            if (!res.equals("已通过")){
+                return error(30000,"该用户审核未通过");
+            }
+        }
+ 
+        //查询用户状态
+        if (byUsername.getState()!=1){
+            return error(30000,"用户非可用状态，不能登录");
+        }
+ 
+        String md5password = service.encryption(password);
+        if (byUsername.getPassword().equals(md5password)) {
+            // 存储Token到数据库
+            AccessToken accessToken = new AccessToken();
+            accessToken.setToken(UUID.randomUUID().toString().replaceAll("-", ""));
+            accessToken.setUser_id(byUsername.getUserId());
+            tokenService.save(accessToken);
+ 
+            // 返回用户信息
+            JSONObject user = JSONObject.parseObject(JSONObject.toJSONString(byUsername));
+            user.put("token", accessToken.getToken());
+            JSONObject ret = new JSONObject();
+            ret.put("obj",user);
+            return success(ret);
+        } else {
+            return error(30000, "账号或密码不正确");
+        }
+}
